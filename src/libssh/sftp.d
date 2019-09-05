@@ -88,7 +88,7 @@ class SFTPDirectory : Disposable {
         this._dispose(false);
     }
 
-    private {
+    package {
         void _dispose(bool fromDtor) {
             if (this._dir !is null) {
                 sftp_closedir(this._dir);
@@ -462,7 +462,7 @@ class SFTPSession : Disposable {
         }
     }
     
-    private {
+    package {
         void _dispose(bool fromDtor) {
             if (this._sftpSession !is null) {
                 sftp_free(this._sftpSession);
