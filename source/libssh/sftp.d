@@ -131,37 +131,49 @@ class SFTPFile : Disposable {
     /**
      * returns SFTPFile.ReadAgain in nonblocking mode
      **/
-    int asyncRead(void[] buffer, uint id) {
-        auto rc = sftp_async_read(this._file, buffer.ptr, cast(uint) buffer.length, id);
-        if (rc == SSH_AGAIN) {
-            return ReadAgain;
-        }
+    ubyte[] asyncRead(uint id) {
+        import std.array : Appender;
+        Appender!(ubyte[]) ret;
+        int rc;
+        do
+        {
+            ubyte[1024*1024] buf;
+            rc = sftp_async_read(this._file, buf.ptr, cast(uint) buf.length, id);
+            if (rc > 0)
+                ret.put(buf[0..rc]);
+        } while (rc == SSH_AGAIN);
         if (rc < 0) {
             throw new SFTPException(sftp_get_error(this._session._sftpSession),
                 this._session._session._session);
         }
-        return rc;
+        return ret.data;
     }
 
     /**
      * returns SFTPFile.ReadAgain in nonblocking mode
      **/
-    size_t read(void[] buffer) {
-        auto rc = sftp_read(this._file, buffer.ptr, cast(size_t) buffer.length);
-        if (rc == SSH_AGAIN) {
-            return ReadAgain;
-        }
+    ubyte[] read() {
+        import std.array : Appender;
+        Appender!(ubyte[]) ret;
+        long rc;
+        do
+        {
+            ubyte[1024*1024] buf;
+            rc = sftp_read(this._file, buf.ptr, cast(size_t) buf.length);
+            if (rc > 0)
+                ret.put(buf[0..rc]);
+        } while (rc == SSH_AGAIN);
         if (rc < 0) {
             throw new SFTPException(sftp_get_error(this._session._sftpSession),
                 this._session._session._session);
         }
-        return rc;
+        return ret.data;
     }
 
     /**
      * returns SFTPFile.WriteAgain in nonblocking mode
      **/
-    size_t write(const void[] buffer) {
+    size_t write(const ubyte[] buffer) {
         auto rc = sftp_write(this._file, buffer.ptr, cast(size_t) buffer.length);
         if (rc == SSH_AGAIN) {
             return WriteAgain;
